@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CaptivePortal.Web")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5afc86e6f914bc67f99aff1200d816225c620edd")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c7be22664df361b75533b6579492ad2d51efa838")]
 [assembly: System.Reflection.AssemblyProductAttribute("CaptivePortal.Web")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CaptivePortal.Web")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
