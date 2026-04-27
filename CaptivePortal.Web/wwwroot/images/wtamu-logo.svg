@@ -1,0 +1,13 @@
+<!-- SVG placeholder for WTAMU logo -->
+<svg width="200" height="80" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="200" height="80" fill="#450012" rx="5"/>
+  
+  <!-- WTAMU Text -->
+  <text x="100" y="25" font-family="Helvetica Neue, Avenir Next, Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#FFB300">WEST TEXAS</text>
+  <text x="100" y="45" font-family="Helvetica Neue, Avenir Next, Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#FFB300">A&M UNIVERSITY</text>
+  
+  <!-- Buffalo silhouette (simplified) -->
+  <circle cx="100" cy="60" r="8" fill="#FFB300"/>
+  <text x="100" y="65" font-family="Helvetica Neue, Avenir Next, Arial, sans-serif" font-size="8" text-anchor="middle" fill="#450012">🦬</text>
+</svg>
