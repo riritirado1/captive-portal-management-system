@@ -1,0 +1,114 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Wi-Fi Access - West Texas A&M University";
+    Layout = "_CaptivePortalLayout";
+}
+
+<div class="captive-portal">
+    <!-- Header Section -->
+    <div class="portal-header text-center mb-4">
+        <img src="/images/wtamu-logo.png" alt="West Texas A&M University" class="university-logo mb-3" />
+        <h1 class="welcome-title">Welcome to WTAMU Wi-Fi</h1>
+        <p class="welcome-subtitle">Connect to our secure wireless network</p>
+    </div>
+
+    <!-- Connection Form -->
+    <div class="connection-form">
+        <form method="post" class="portal-form">
+            <!-- Email Input -->
+            <div class="form-group mb-3">
+                <label for="email" class="form-label">Email Address</label>
+                <input type="email" class="form-control form-control-lg" id="email" name="email" 
+                       asp-for="Email" placeholder="Enter your email address" required>
+                <div class="form-text">We'll use this to provide you with Wi-Fi access</div>
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+
+            <!-- Terms Checkbox -->
+            <div class="form-check mb-4">
+                <input type="checkbox" class="form-check-input" id="acceptTerms" name="acceptTerms" 
+                       asp-for="AcceptTerms" required>
+                <label class="form-check-label" for="acceptTerms">
+                    I agree to the <a href="#" onclick="showTerms(); return false;">Terms of Service</a>
+                </label>
+                <span asp-validation-for="AcceptTerms" class="text-danger d-block"></span>
+            </div>
+
+            <!-- Connect Button -->
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary btn-lg btn-connect">
+                    <i class="bi bi-wifi"></i> Connect to Wi-Fi
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Advertisement Section -->
+    @if (Model.CurrentAd != null)
+    {
+        <div class="advertisement-section mt-5">
+            <div class="ad-container text-center">
+                <h3 class="ad-title">@Model.CurrentAd.Title</h3>
+                @if (!string.IsNullOrEmpty(Model.CurrentAd.TargetUrl))
+                {
+                    <a href="@Model.CurrentAd.TargetUrl" target="_blank" onclick="trackAdClick(@Model.CurrentAd.Id)">
+                        <img src="@Model.CurrentAd.ImagePath" alt="@Model.CurrentAd.Title" class="ad-image" />
+                    </a>
+                }
+                else
+                {
+                    <img src="@Model.CurrentAd.ImagePath" alt="@Model.CurrentAd.Title" class="ad-image" />
+                }
+                @if (!string.IsNullOrEmpty(Model.CurrentAd.Description))
+                {
+                    <p class="ad-description">@Model.CurrentAd.Description</p>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Discrete Admin Access -->
+<div class="admin-access-footer">
+    <div class="container text-center">
+        <small>
+            <a href="/Admin/Login" class="text-muted text-decoration-none" style="font-size: 0.7rem;">
+                <i class="bi bi-gear-wide-connected"></i>
+            </a>
+        </small>
+    </div>
+</div>
+
+<!-- Terms of Service Modal -->
+<div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="termsModalLabel">Wi-Fi Terms of Service</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h6>Acceptable Use Policy</h6>
+                <p>By connecting to West Texas A&M University Wi-Fi, you agree to the following terms:</p>
+                <ul>
+                    <li>Use the network responsibly and in compliance with all applicable laws</li>
+                    <li>Respect the privacy and rights of other users</li>
+                    <li>Do not attempt to access unauthorized systems or data</li>
+                    <li>Do not use the network for illegal activities or harassment</li>
+                    <li>Bandwidth may be limited during peak usage times</li>
+                </ul>
+                <p><strong>Privacy Notice:</strong> Your email address and connection information may be collected for network management and communication purposes.</p>
+                <p>For full terms and conditions, visit <a href="https://wtamu.edu/terms" target="_blank">wtamu.edu/terms</a></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">I Understand</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="/js/captive-portal.js"></script>
+    <partial name="_ValidationScriptsPartial" />
+}

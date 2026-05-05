@@ -1,0 +1,147 @@
+@page "/Admin/Login"
+@model CaptivePortal.Web.Pages.Admin.LoginModel
+@{
+    ViewData["Title"] = "Admin Login";
+    Layout = "_Layout";
+}
+
+<div class="container-fluid admin-login">
+    <div class="row justify-content-center align-items-center min-vh-100">
+        <div class="col-11 col-md-6 col-lg-4">
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-5">
+                    <!-- WTAMU Logo and Branding -->
+                    <div class="text-center mb-4">
+                        <img src="/images/wtamu-logo.png" alt="WTAMU" class="mb-3" style="height: 60px;">
+                        <h3 class="mb-1" style="color: var(--wtamu-maroon); font-weight: 600;">Admin Portal</h3>
+                        <p class="text-muted small mb-0">Captive Portal Management System</p>
+                    </div>
+
+                    <!-- Login Form -->
+                    <form method="post" asp-page-handler="Login">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                        
+                        <div class="form-floating mb-3">
+                            <input asp-for="Input.Email" 
+                                   type="email" 
+                                   class="form-control" 
+                                   id="email" 
+                                   placeholder="admin@wtamu.edu"
+                                   required>
+                            <label for="email">
+                                <i class="bi bi-person me-2"></i>Email Address
+                            </label>
+                            <span asp-validation-for="Input.Email" class="text-danger small"></span>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input asp-for="Input.Password" 
+                                   type="password" 
+                                   class="form-control" 
+                                   id="password" 
+                                   placeholder="Password"
+                                   required>
+                            <label for="password">
+                                <i class="bi bi-lock me-2"></i>Password
+                            </label>
+                            <span asp-validation-for="Input.Password" class="text-danger small"></span>
+                        </div>
+
+                        <div class="form-check mb-4">
+                            <input asp-for="Input.RememberMe" 
+                                   type="checkbox" 
+                                   class="form-check-input" 
+                                   id="rememberMe">
+                            <label class="form-check-label" for="rememberMe">
+                                Remember me on this device
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 mb-3" style="background-color: var(--wtamu-maroon); border-color: var(--wtamu-maroon);">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>
+                            Sign In to Admin Portal
+                        </button>
+                        
+                        <!-- Error Messages -->
+                        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+                        {
+                            <div class="alert alert-danger" role="alert">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                @Model.ErrorMessage
+                            </div>
+                        }
+
+                        <!-- Security Notice -->
+                        <div class="text-center mt-4">
+                            <small class="text-muted">
+                                <i class="bi bi-shield-lock me-1"></i>
+                                Secure admin access only
+                            </small>
+                        </div>
+                    </form>
+
+                    <!-- Return to Portal Link -->
+                    <div class="text-center mt-4 pt-3 border-top">
+                        <a href="/" class="text-decoration-none">
+                            <i class="bi bi-arrow-left me-2"></i>
+                            <small>Return to Captive Portal</small>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Default Credentials Notice (Development Only) -->
+            @if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
+            {
+                <div class="card mt-3 border-warning">
+                    <div class="card-body py-2">
+                        <small class="text-warning">
+                            <i class="bi bi-info-circle me-1"></i>
+                            <strong>Development Mode:</strong> Default admin: admin@wtamu.edu / Admin@123!
+                        </small>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+.admin-login {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    min-height: 100vh;
+}
+
+.admin-login .card {
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.admin-login .form-floating > .form-control {
+    border-radius: 10px;
+    border: 1px solid #dee2e6;
+    transition: all 0.3s ease;
+}
+
+.admin-login .form-floating > .form-control:focus {
+    border-color: var(--wtamu-maroon);
+    box-shadow: 0 0 0 0.2rem rgba(69, 0, 18, 0.25);
+}
+
+.admin-login .btn-primary {
+    border-radius: 10px;
+    padding: 12px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.admin-login .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 15px rgba(69, 0, 18, 0.3);
+}
+
+.form-check-input:checked {
+    background-color: var(--wtamu-maroon);
+    border-color: var(--wtamu-maroon);
+}
+</style>
