@@ -1,37 +1,185 @@
 @page
 @model SuccessModel
 @{
-    ViewData["Title"] = "Connected Successfully";
+    ViewData["Title"] = "Wi-Fi Access Granted";
     Layout = "_CaptivePortalLayout";
 }
 
 <div class="success-page text-center">
+    <!-- Success Animation -->
     <div class="success-icon mb-4">
-        <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
-    </div>
-    
-    <h1 class="success-title mb-3">Welcome to WTAMU Wi-Fi!</h1>
-    <p class="success-message mb-4">You are now connected to our wireless network.</p>
-    
-    <div class="connection-info bg-light p-4 rounded mb-4">
-        <h5>Connection Details</h5>
-        <p class="mb-1"><strong>Email:</strong> @Model.Email</p>
-        <p class="mb-1"><strong>Connected at:</strong> @Model.ConnectedAt.ToString("MMM dd, yyyy h:mm tt")</p>
-        <p class="mb-0"><strong>Location:</strong> @Model.Location</p>
-    </div>
-    
-    <div class="helpful-links mb-4">
-        <h5>Quick Links</h5>
-        <div class="d-grid gap-2 d-md-flex justify-content-md-center">
-            <a href="https://wtamu.edu" class="btn btn-primary">WTAMU Homepage</a>
-            <a href="https://buffalomail.wtamu.edu" class="btn btn-outline-primary">BuffaloMail</a>
-            <a href="https://wtclass.wtamu.edu" class="btn btn-outline-primary">WTClass</a>
+        <i class="bi bi-wifi text-success" style="font-size: 4rem; animation: fadeIn 0.8s ease-in;"></i>
+        <div class="mt-2">
+            <i class="bi bi-check-circle-fill text-success" style="font-size: 2rem;"></i>
         </div>
     </div>
     
-    <div class="session-info alert alert-info">
-        <i class="bi bi-info-circle"></i>
-        <strong>Session Information:</strong> Your connection will remain active for 24 hours. 
-        After that, you may need to reconnect by visiting this page again.
+    <!-- Main Success Message -->
+    <h1 class="success-title mb-3 text-primary">
+        @if (Model.IsReconnection)
+        {
+            <span>Welcome Back to @Model.NetworkName!</span>
+        }
+        else
+        {
+            <span>Connected to @Model.NetworkName!</span>
+        }
+    </h1>
+    
+    <p class="success-message mb-4 lead">
+        @if (Model.IsReconnection)
+        {
+            <span>You have successfully reconnected to our wireless network.</span>
+        }
+        else
+        {
+            <span>Your Wi-Fi access has been granted. You are now online!</span>
+        }
+    </p>
+
+    <!-- Connection Details Card -->
+    <div class="connection-info bg-light p-4 rounded-3 mb-4 mx-auto" style="max-width: 500px;">
+        <h5 class="text-primary mb-3">
+            <i class="bi bi-info-circle me-2"></i>Access Details
+        </h5>
+        <div class="row text-start">
+            <div class="col-sm-4"><strong>Email:</strong></div>
+            <div class="col-sm-8">@Model.Email</div>
+        </div>
+        <div class="row text-start mt-2">
+            <div class="col-sm-4"><strong>Connected:</strong></div>
+            <div class="col-sm-8">@Model.ConnectedAt.ToString("MMM dd, yyyy h:mm tt")</div>
+        </div>
+        <div class="row text-start mt-2">
+            <div class="col-sm-4"><strong>Location:</strong></div>
+            <div class="col-sm-8">@Model.Location</div>
+        </div>
+        @if (!string.IsNullOrEmpty(Model.SessionId))
+        {
+            <div class="row text-start mt-2">
+                <div class="col-sm-4"><strong>Session ID:</strong></div>
+                <div class="col-sm-8"><small class="text-muted">@Model.SessionId.Substring(0, Math.Min(Model.SessionId.Length, 20))...</small></div>
+            </div>
+        }
+        @if (Model.AccessExpiresAt.HasValue)
+        {
+            <div class="row text-start mt-2">
+                <div class="col-sm-4"><strong>Expires:</strong></div>
+                <div class="col-sm-8">@Model.AccessExpiresAt.Value.ToString("MMM dd, yyyy h:mm tt")</div>
+            </div>
+        }
+        @if (Model.IsReconnection)
+        {
+            <div class="row text-start mt-2">
+                <div class="col-sm-4"><strong>Visit #:</strong></div>
+                <div class="col-sm-8">@Model.ReconnectionCount</div>
+            </div>
+        }
+    </div>
+
+    <!-- Auto-Redirect Information -->
+    @if (!string.IsNullOrEmpty(Model.RedirectUrl) && Model.AutoRedirectEnabled)
+    {
+        <div class="alert alert-info mx-auto" style="max-width: 500px;">
+            <div class="d-flex align-items-center justify-content-center">
+                <div class="spinner-border spinner-border-sm me-2" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <span>Redirecting you in <span id="countdown">@Model.RedirectDelay</span> seconds...</span>
+            </div>
+            <div class="mt-2">
+                <a href="@Model.RedirectUrl" class="btn btn-sm btn-primary">Go Now</a>
+                <button class="btn btn-sm btn-outline-secondary ms-2" onclick="cancelRedirect()">Stay Here</button>
+            </div>
+        </div>
+    }
+
+    <!-- Quick Links -->
+    <div class="helpful-links mb-4">
+        <h5 class="text-primary">
+            <i class="bi bi-link-45deg me-2"></i>Quick Access
+        </h5>
+        <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+            <a href="https://wtamu.edu" class="btn btn-primary">
+                <i class="bi bi-house me-2"></i>WTAMU Homepage
+            </a>
+            <a href="https://buffalomail.wtamu.edu" class="btn btn-outline-primary">
+                <i class="bi bi-envelope me-2"></i>BuffaloMail
+            </a>
+            <a href="https://wtclass.wtamu.edu" class="btn btn-outline-primary">
+                <i class="bi bi-mortarboard me-2"></i>WTClass
+            </a>
+        </div>
+    </div>
+    
+    <!-- Session Information -->
+    <div class="session-info alert alert-success mx-auto" style="max-width: 500px;">
+        <div class="d-flex align-items-center justify-content-center">
+            <i class="bi bi-shield-check me-2"></i>
+            <div class="text-start">
+                <strong>Your session is active!</strong><br>
+                <small>
+                    @if (Model.AccessExpiresAt.HasValue)
+                    {
+                        var timeRemaining = Model.AccessExpiresAt.Value - DateTime.UtcNow;
+                        if (timeRemaining.TotalDays > 1)
+                        {
+                            <span>Access valid for @Math.Floor(timeRemaining.TotalDays) days and @timeRemaining.Hours hours.</span>
+                        }
+                        else
+                        {
+                            <span>Access valid for @timeRemaining.Hours hours and @timeRemaining.Minutes minutes.</span>
+                        }
+                    }
+                    else
+                    {
+                        <span>Session will remain active for 24 hours.</span>
+                    }
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Network Guidelines -->
+    <div class="mt-4">
+        <small class="text-muted">
+            <i class="bi bi-exclamation-triangle me-1"></i>
+            Please use the network responsibly. For support, contact IT Help Desk at (806) 651-4357.
+        </small>
     </div>
 </div>
+
+<!-- Auto-redirect Script -->
+@if (!string.IsNullOrEmpty(Model.RedirectUrl) && Model.AutoRedirectEnabled)
+{
+    <script>
+        let countdown = @Model.RedirectDelay;
+        let redirectUrl = '@Html.Raw(Model.RedirectUrl)';
+        let countdownElement = document.getElementById('countdown');
+        let redirectCancelled = false;
+
+        function cancelRedirect() {
+            redirectCancelled = true;
+            document.querySelector('.alert-info').style.display = 'none';
+        }
+
+        function updateCountdown() {
+            if (redirectCancelled) return;
+            
+            countdown--;
+            if (countdownElement) {
+                countdownElement.textContent = countdown;
+            }
+            
+            if (countdown <= 0) {
+                window.location.href = redirectUrl;
+            } else {
+                setTimeout(updateCountdown, 1000);
+            }
+        }
+
+        // Start countdown
+        setTimeout(updateCountdown, 1000);
+    </script>
+}
+

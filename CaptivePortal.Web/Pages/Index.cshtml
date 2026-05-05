@@ -16,6 +16,9 @@
     <!-- Connection Form -->
     <div class="connection-form">
         <form method="post" class="portal-form">
+            <!-- Validation Summary for debugging -->
+            <div asp-validation-summary="All" class="alert alert-danger" style="display: none;"></div>
+            
             <!-- Email Input -->
             <div class="form-group mb-3">
                 <label for="email" class="form-label">Email Address</label>
