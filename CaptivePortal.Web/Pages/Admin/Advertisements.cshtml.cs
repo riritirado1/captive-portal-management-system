@@ -23,11 +23,18 @@ namespace CaptivePortal.Web.Pages.Admin
         }
 
         public List<Advertisement> Advertisements { get; set; } = new();
+        public List<Campaign> Campaigns { get; set; } = new();
 
         public async Task OnGetAsync()
         {
             Advertisements = await _context.Advertisements
+                .Include(a => a.Campaign)
                 .OrderByDescending(a => a.CreatedAt)
+                .ToListAsync();
+
+            Campaigns = await _context.Campaigns
+                .Where(c => c.IsActive)
+                .OrderBy(c => c.Name)
                 .ToListAsync();
         }
 
@@ -54,7 +61,13 @@ namespace CaptivePortal.Web.Pages.Admin
                     IsActive = model.IsActive,
                     StartDate = model.StartDate,
                     EndDate = model.EndDate,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+                    // PBI#7 Fields
+                    CampaignId = model.CampaignId,
+                    Priority = model.Priority,
+                    Tags = model.Tags,
+                    Status = model.Status,
+                    CreatedBy = User.Identity?.Name ?? "System"
                 };
 
                 _context.Advertisements.Add(advertisement);
@@ -97,6 +110,13 @@ namespace CaptivePortal.Web.Pages.Admin
                 advertisement.IsActive = model.IsActive;
                 advertisement.StartDate = model.StartDate;
                 advertisement.EndDate = model.EndDate;
+                // PBI#7 Fields
+                advertisement.CampaignId = model.CampaignId;
+                advertisement.Priority = model.Priority;
+                advertisement.Tags = model.Tags;
+                advertisement.Status = model.Status;
+                advertisement.LastModified = DateTime.UtcNow;
+                advertisement.ModifiedBy = User.Identity?.Name ?? "System";
 
                 // Handle new image upload
                 if (model.ImageFile != null)
@@ -172,6 +192,25 @@ namespace CaptivePortal.Web.Pages.Admin
                 _logger.LogWarning(ex, "Error deleting image file: {ImagePath}", imagePath);
             }
         }
+
+        // Helper methods for view
+        public static string GetStatusBadgeClass(string? status) => status?.ToLower() switch
+        {
+            "approved" => "bg-success",
+            "pending" => "bg-warning",
+            "rejected" => "bg-danger",
+            "archived" => "bg-secondary",
+            _ => "bg-light text-dark"
+        };
+
+        public static string GetPriorityBadgeClass(int priority) => priority switch
+        {
+            >= 80 => "bg-danger text-white",
+            >= 60 => "bg-warning text-dark",
+            >= 40 => "bg-info text-white",
+            >= 20 => "bg-primary text-white",
+            _ => "bg-light text-dark"
+        };
     }
 
     public class AddAdvertisementModel
@@ -198,6 +237,18 @@ namespace CaptivePortal.Web.Pages.Admin
         public DateTime? StartDate { get; set; }
 
         public DateTime? EndDate { get; set; }
+
+        // PBI#7 Fields
+        public int? CampaignId { get; set; }
+
+        [Range(0, 100, ErrorMessage = "Priority must be between 0 and 100")]
+        public int Priority { get; set; } = 0;
+
+        [StringLength(500, ErrorMessage = "Tags cannot exceed 500 characters")]
+        public string? Tags { get; set; }
+
+        [StringLength(100, ErrorMessage = "Status cannot exceed 100 characters")]
+        public string Status { get; set; } = "Draft";
     }
 
     public class EditAdvertisementModel
@@ -226,5 +277,17 @@ namespace CaptivePortal.Web.Pages.Admin
         public DateTime? StartDate { get; set; }
 
         public DateTime? EndDate { get; set; }
+
+        // PBI#7 Fields
+        public int? CampaignId { get; set; }
+
+        [Range(0, 100, ErrorMessage = "Priority must be between 0 and 100")]
+        public int Priority { get; set; } = 0;
+
+        [StringLength(500, ErrorMessage = "Tags cannot exceed 500 characters")]
+        public string? Tags { get; set; }
+
+        [StringLength(100, ErrorMessage = "Status cannot exceed 100 characters")]
+        public string Status { get; set; } = "Draft";
     }
 }

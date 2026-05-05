@@ -1,0 +1,257 @@
+@page "/Admin/BulkUpload"
+@model CaptivePortal.Web.Pages.Admin.BulkUploadModel
+@{
+    ViewData["Title"] = "Bulk Advertisement Upload";
+    Layout = "_AdminLayout";
+}
+
+<div class="bulk-upload-page">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="page-title">Bulk Advertisement Upload</h1>
+                    <p class="page-description">Upload multiple advertisements at once with shared default settings.</p>
+                </div>
+                <a href="/Admin/Advertisements" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Advertisements
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Form -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-cloud-upload me-2"></i>Bulk Upload Configuration</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                <div class="row">
+                    <!-- File Upload Section -->
+                    <div class="col-lg-6">
+                        <h6 class="text-primary mb-3">Image Files</h6>
+                        
+                        <div class="mb-3">
+                            <label for="imageFiles" class="form-label">Select Images *</label>
+                            <input type="file" class="form-control" name="ImageFiles" id="imageFiles" 
+                                   accept="image/*" multiple required>
+                            <div class="form-text">
+                                Select multiple image files (JPG, PNG, GIF, WebP). Max 5MB per file.
+                                <br><strong>Tip:</strong> Advertisement titles will be generated from filenames.
+                            </div>
+                            <div class="text-danger" id="imageFilesError"></div>
+                        </div>
+
+                        <!-- File Preview Area -->
+                        <div id="filePreviewContainer" class="mt-3" style="display: none;">
+                            <h6>Selected Files:</h6>
+                            <div id="filePreviewList" class="row g-2"></div>
+                        </div>
+                    </div>
+
+                    <!-- Default Settings Section -->
+                    <div class="col-lg-6">
+                        <h6 class="text-primary mb-3">Default Settings (Applied to All)</h6>
+                        
+                        <div class="mb-3">
+                            <label for="defaultDescription" class="form-label">Default Description</label>
+                            <textarea class="form-control" name="DefaultDescription" id="defaultDescription" rows="3"
+                                      placeholder="This description will be applied to all uploaded advertisements"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="defaultTargetUrl" class="form-label">Default Target URL</label>
+                            <input type="url" class="form-control" name="DefaultTargetUrl" id="defaultTargetUrl" 
+                                   placeholder="https://example.com">
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="defaultLocation" class="form-label">Default Location</label>
+                                    <select class="form-select" name="DefaultLocation" id="defaultLocation">
+                                        <option value="">All Locations</option>
+                                        <option value="Library">Library</option>
+                                        <option value="Student Center">Student Center</option>
+                                        <option value="Academic Buildings">Academic Buildings</option>
+                                        <option value="Dormitories">Dormitories</option>
+                                        <option value="Dining Areas">Dining Areas</option>
+                                        <option value="Recreation Center">Recreation Center</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="defaultCampaignId" class="form-label">Campaign</label>
+                                    <select class="form-select" name="DefaultCampaignId" id="defaultCampaignId">
+                                        <option value="">No Campaign</option>
+                                        @foreach (var campaign in Model.Campaigns)
+                                        {
+                                            <option value="@campaign.Id">@campaign.Name</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="defaultStartDate" class="form-label">Start Date</label>
+                                    <input type="datetime-local" class="form-control" name="DefaultStartDate" id="defaultStartDate">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="defaultEndDate" class="form-label">End Date</label>
+                                    <input type="datetime-local" class="form-control" name="DefaultEndDate" id="defaultEndDate">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="defaultPriority" class="form-label">Priority (0-100)</label>
+                                    <input type="number" class="form-control" name="DefaultPriority" id="defaultPriority" 
+                                           min="0" max="100" value="0">
+                                    <div class="form-text">Higher numbers = higher display priority</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Default Status</label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="DefaultIsActive" 
+                                               id="defaultIsActive" checked>
+                                        <label class="form-check-label" for="defaultIsActive">Active</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="defaultTags" class="form-label">Default Tags</label>
+                            <input type="text" class="form-control" name="DefaultTags" id="defaultTags" 
+                                   placeholder="marketing, promotion, event, student-services">
+                            <div class="form-text">Comma-separated tags for organization and filtering</div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle me-1"></i>
+                            All uploaded advertisements will be automatically approved and use the filename as the title.
+                        </small>
+                    </div>
+                    <div>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-cloud-upload me-2"></i>Upload Advertisements
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Upload Guidelines -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h6 class="mb-0"><i class="bi bi-lightbulb me-2"></i>Upload Guidelines & Best Practices</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <h6 class="text-success">✓ Recommended</h6>
+                    <ul class="list-unstyled small">
+                        <li>• Image dimensions: 400x300px or 800x600px</li>
+                        <li>• File formats: JPG, PNG, WebP</li>
+                        <li>• File size: Under 1MB per image</li>
+                        <li>• Descriptive filenames (used as titles)</li>
+                        <li>• Consistent visual branding</li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h6 class="text-warning">⚠ Guidelines</h6>
+                    <ul class="list-unstyled small">
+                        <li>• Maximum file size: 5MB per image</li>
+                        <li>• Supported formats only</li>
+                        <li>• Avoid special characters in filenames</li>
+                        <li>• Review default settings before upload</li>
+                        <li>• Test with small batches first</li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h6 class="text-info">💡 Tips</h6>
+                    <ul class="list-unstyled small">
+                        <li>• Use campaigns to group related ads</li>
+                        <li>• Set appropriate priority levels</li>
+                        <li>• Add relevant tags for easy searching</li>
+                        <li>• Schedule start/end dates if needed</li>
+                        <li>• Review uploaded ads in the main list</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // File preview functionality
+        document.getElementById('imageFiles').addEventListener('change', function(e) {
+            const files = e.target.files;
+            const container = document.getElementById('filePreviewContainer');
+            const list = document.getElementById('filePreviewList');
+            
+            if (files.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+            
+            list.innerHTML = '';
+            container.style.display = 'block';
+            
+            Array.from(files).forEach((file, index) => {
+                const col = document.createElement('div');
+                col.className = 'col-md-3 mb-2';
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    col.innerHTML = `
+                        <div class="card">
+                            <img src="${e.target.result}" class="card-img-top" style="height: 120px; object-fit: cover;">
+                            <div class="card-body p-2">
+                                <h6 class="card-title text-truncate" style="font-size: 0.85rem;">${file.name}</h6>
+                                <small class="text-muted">${(file.size / 1024 / 1024).toFixed(2)} MB</small>
+                            </div>
+                        </div>
+                    `;
+                };
+                reader.readAsDataURL(file);
+                
+                list.appendChild(col);
+            });
+        });
+
+        // Form validation
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const files = document.getElementById('imageFiles').files;
+            if (files.length === 0) {
+                e.preventDefault();
+                alert('Please select at least one image file to upload.');
+                return false;
+            }
+            
+            // Show loading state
+            const submitBtn = document.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Uploading...';
+        });
+    </script>
+}

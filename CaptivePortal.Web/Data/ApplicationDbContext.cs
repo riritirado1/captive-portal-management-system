@@ -13,6 +13,7 @@ namespace CaptivePortal.Web.Data
 
         public DbSet<PortalUser> PortalUsers { get; set; }
         public DbSet<Advertisement> Advertisements { get; set; }
+        public DbSet<Campaign> Campaigns { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -39,8 +40,32 @@ namespace CaptivePortal.Web.Data
                 entity.Property(e => e.ImagePath).IsRequired().HasMaxLength(500);
                 entity.Property(e => e.TargetUrl).HasMaxLength(500);
                 entity.Property(e => e.Location).HasMaxLength(100);
+                entity.Property(e => e.CreatedBy).HasMaxLength(100);
+                entity.Property(e => e.ModifiedBy).HasMaxLength(100);
+                entity.Property(e => e.Tags).HasMaxLength(500);
+                entity.Property(e => e.Status).HasMaxLength(100);
                 entity.HasIndex(e => e.IsActive);
                 entity.HasIndex(e => e.Location);
+                entity.HasIndex(e => e.CreatedAt);
+                entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.CampaignId);
+                
+                // Configure relationship with Campaign
+                entity.HasOne(e => e.Campaign)
+                      .WithMany(c => c.Advertisements)
+                      .HasForeignKey(e => e.CampaignId)
+                      .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            // Configure Campaign
+            builder.Entity<Campaign>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Description).HasMaxLength(1000);
+                entity.Property(e => e.CreatedBy).HasMaxLength(100);
+                entity.HasIndex(e => e.IsActive);
+                entity.HasIndex(e => e.CreatedAt);
             });
         }
     }
