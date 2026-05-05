@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using CaptivePortal.Web.Data;
+using CaptivePortal.Web.Models;
 using CaptivePortal.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -44,6 +45,9 @@ builder.Services.Configure<WiFiAccessOptions>(options =>
 
 builder.Services.AddScoped<IWiFiAccessService, WiFiAccessService>();
 
+// Add API Controllers
+builder.Services.AddControllers();
+
 builder.Services.AddRazorPages(options =>
 {
     // Require authentication for admin pages
@@ -70,6 +74,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
+app.MapControllers();
 app.MapRazorPages()
    .WithStaticAssets();
 
@@ -85,6 +90,9 @@ using (var scope = app.Services.CreateScope())
         // Seed default admin user
         var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
         await SeedAdminUser(userManager);
+        
+        // Seed sample advertisements
+        await SeedSampleAdvertisements(context);
     }
     catch (Exception ex)
     {
@@ -111,4 +119,57 @@ async Task SeedAdminUser(UserManager<IdentityUser> userManager)
         
         await userManager.CreateAsync(adminUser, "Admin@123!");
     }
+}
+
+async Task SeedSampleAdvertisements(ApplicationDbContext context)
+{
+    // Check if we already have advertisements
+    if (await context.Advertisements.AnyAsync())
+        return;
+
+    var sampleAds = new[]
+    {
+        new Advertisement
+        {
+            Title = "WTAMU Student Services",
+            Description = "Get academic support and student services at our Student Center. Academic advising, tutoring, and career counseling available.",
+            ImagePath = "/images/ads/sample-student-services.svg",
+            TargetUrl = "https://www.wtamu.edu/student-support",
+            Location = "Student Center",
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
+            StartDate = DateTime.UtcNow.AddDays(-30),
+            EndDate = DateTime.UtcNow.AddDays(60)
+        },
+        new Advertisement
+        {
+            Title = "WTAMU Library - 24/7 Access",
+            Description = "The library is open 24/7 during finals week! Study rooms, research assistance, and online resources available.",
+            ImagePath = "/images/ads/sample-library.svg",
+            TargetUrl = "https://www.wtamu.edu/library",
+            Location = "Library",
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
+            StartDate = DateTime.UtcNow.AddDays(-15),
+            EndDate = DateTime.UtcNow.AddDays(90)
+        },
+        new Advertisement
+        {
+            Title = "Campus Dining - Extended Hours",
+            Description = "Enjoy fresh meals and grab-and-go options with our new extended dining hours. Buffalo Dining Hall and Union Market now open later!",
+            ImagePath = "/images/ads/sample-dining.svg",
+            TargetUrl = "https://www.wtamu.edu/dining",
+            Location = null, // Show everywhere
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
+            StartDate = DateTime.UtcNow.AddDays(-7),
+            EndDate = DateTime.UtcNow.AddDays(45)
+        }
+    };
+
+    await context.Advertisements.AddRangeAsync(sampleAds);
+    await context.SaveChangesAsync();
+
+    var logger = app.Services.GetService<ILogger<Program>>();
+    logger?.LogInformation("Seeded {Count} sample advertisements", sampleAds.Length);
 }
