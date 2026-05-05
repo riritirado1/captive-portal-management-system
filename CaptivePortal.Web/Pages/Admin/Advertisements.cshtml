@@ -1,0 +1,398 @@
+@page "/Admin/Advertisements"
+@model CaptivePortal.Web.Pages.Admin.AdvertisementsModel
+@{
+    ViewData["Title"] = "Advertisement Management";
+    Layout = "_AdminLayout";
+}
+
+<div class="admin-advertisements">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="page-title">Advertisement Management</h1>
+                    <p class="page-description">Create, edit, and manage advertisements displayed on the captive portal.</p>
+                </div>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAdModal">
+                    <i class="bi bi-plus-circle me-2"></i>Add Advertisement
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Advertisements List -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-badge-ad me-2"></i>Current Advertisements</h5>
+        </div>
+        <div class="card-body">
+            @if (Model.Advertisements.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Preview</th>
+                                <th>Title</th>
+                                <th>Location</th>
+                                <th>Status</th>
+                                <th>Schedule</th>
+                                <th>Clicks</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var ad in Model.Advertisements)
+                            {
+                                <tr>
+                                    <td>
+                                        <img src="@ad.ImagePath" alt="@ad.Title" 
+                                             class="ad-thumbnail" style="width: 50px; height: 40px; object-fit: cover; border-radius: 4px;" />
+                                    </td>
+                                    <td>
+                                        <strong>@ad.Title</strong>
+                                        @if (!string.IsNullOrEmpty(ad.Description))
+                                        {
+                                            <br><small class="text-muted">@ad.Description</small>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark">
+                                            @(string.IsNullOrEmpty(ad.Location) ? "All Locations" : ad.Location)
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge @(ad.IsActive ? "bg-success" : "bg-secondary")">
+                                            @(ad.IsActive ? "Active" : "Inactive")
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            @if (ad.StartDate.HasValue)
+                                            {
+                                                @($"From: {ad.StartDate:MMM dd, yyyy}")
+                                                <br>
+                                            }
+                                            @if (ad.EndDate.HasValue)
+                                            {
+                                                @($"To: {ad.EndDate:MMM dd, yyyy}")
+                                            }
+                                            else
+                                            {
+                                                @("Ongoing")
+                                            }
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">@ad.ClickCount</span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <button class="btn btn-outline-primary" 
+                                                    onclick="editAdvertisement(@ad.Id)"
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#editAdModal">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger" 
+                                                    onclick="deleteAdvertisement(@ad.Id, '@ad.Title')">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-badge-ad text-muted" style="font-size: 4rem;"></i>
+                    <h5 class="text-muted mt-3">No advertisements yet</h5>
+                    <p class="text-muted">Create your first advertisement to display on the captive portal.</p>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAdModal">
+                        <i class="bi bi-plus-circle me-2"></i>Add First Advertisement
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Add Advertisement Modal -->
+<div class="modal fade" id="addAdModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="post" asp-page-handler="Add" enctype="multipart/form-data">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Advertisement</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="addTitle" class="form-label">Title *</label>
+                                <input type="text" class="form-control" name="Title" id="addTitle" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="addDescription" class="form-label">Description</label>
+                                <textarea class="form-control" name="Description" id="addDescription" rows="3"></textarea>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="addTargetUrl" class="form-label">Target URL</label>
+                                <input type="url" class="form-control" name="TargetUrl" id="addTargetUrl" 
+                                       placeholder="https://example.com">
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="addLocation" class="form-label">Location</label>
+                                        <select class="form-select" name="Location" id="addLocation">
+                                            <option value="">All Locations</option>
+                                            <option value="Library">Library</option>
+                                            <option value="Student Center">Student Center</option>
+                                            <option value="Academic Buildings">Academic Buildings</option>
+                                            <option value="Dormitories">Dormitories</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Status</label>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" name="IsActive" 
+                                                   id="addIsActive" checked>
+                                            <label class="form-check-label" for="addIsActive">Active</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="addStartDate" class="form-label">Start Date</label>
+                                        <input type="datetime-local" class="form-control" name="StartDate" id="addStartDate">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="addEndDate" class="form-label">End Date</label>
+                                        <input type="datetime-local" class="form-control" name="EndDate" id="addEndDate">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="addImageFile" class="form-label">Advertisement Image *</label>
+                                <input type="file" class="form-control" name="ImageFile" id="addImageFile" 
+                                       accept="image/*" required>
+                                <div class="form-text">Recommended: 400x300px, max 2MB</div>
+                            </div>
+                            
+                            <div class="preview-container mt-3" id="addImagePreview" style="display: none;">
+                                <img id="addPreviewImg" src="" alt="Preview" 
+                                     style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 8px;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Advertisement</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Advertisement Modal -->
+<div class="modal fade" id="editAdModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="post" asp-page-handler="Edit" enctype="multipart/form-data">
+                <input type="hidden" name="Id" id="editId">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Advertisement</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="editTitle" class="form-label">Title *</label>
+                                <input type="text" class="form-control" name="Title" id="editTitle" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="editDescription" class="form-label">Description</label>
+                                <textarea class="form-control" name="Description" id="editDescription" rows="3"></textarea>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="editTargetUrl" class="form-label">Target URL</label>
+                                <input type="url" class="form-control" name="TargetUrl" id="editTargetUrl">
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="editLocation" class="form-label">Location</label>
+                                        <select class="form-select" name="Location" id="editLocation">
+                                            <option value="">All Locations</option>
+                                            <option value="Library">Library</option>
+                                            <option value="Student Center">Student Center</option>
+                                            <option value="Academic Buildings">Academic Buildings</option>
+                                            <option value="Dormitories">Dormitories</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Status</label>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" name="IsActive" 
+                                                   id="editIsActive">
+                                            <label class="form-check-label" for="editIsActive">Active</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="editStartDate" class="form-label">Start Date</label>
+                                        <input type="datetime-local" class="form-control" name="StartDate" id="editStartDate">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="editEndDate" class="form-label">End Date</label>
+                                        <input type="datetime-local" class="form-control" name="EndDate" id="editEndDate">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="editImageFile" class="form-label">Update Image</label>
+                                <input type="file" class="form-control" name="ImageFile" id="editImageFile" 
+                                       accept="image/*">
+                                <div class="form-text">Leave empty to keep current image</div>
+                            </div>
+                            
+                            <div class="preview-container mt-3" id="editCurrentImage">
+                                <label class="form-label">Current Image:</label>
+                                <img id="editCurrentImg" src="" alt="Current" 
+                                     style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 8px;">
+                            </div>
+                            
+                            <div class="preview-container mt-3" id="editImagePreview" style="display: none;">
+                                <label class="form-label">New Image Preview:</label>
+                                <img id="editPreviewImg" src="" alt="Preview" 
+                                     style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 8px;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Advertisement</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Image preview functionality
+        function setupImagePreview(fileInputId, previewContainerId, previewImgId) {
+            document.getElementById(fileInputId).addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                const previewContainer = document.getElementById(previewContainerId);
+                const previewImg = document.getElementById(previewImgId);
+                
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        previewImg.src = e.target.result;
+                        previewContainer.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    previewContainer.style.display = 'none';
+                }
+            });
+        }
+        
+        // Setup image previews
+        setupImagePreview('addImageFile', 'addImagePreview', 'addPreviewImg');
+        setupImagePreview('editImageFile', 'editImagePreview', 'editPreviewImg');
+        
+        // Edit advertisement functionality
+        async function editAdvertisement(id) {
+            try {
+                const response = await fetch(`/api/ads/${id}`);
+                const ad = await response.json();
+                
+                // Populate edit form
+                document.getElementById('editId').value = ad.id;
+                document.getElementById('editTitle').value = ad.title;
+                document.getElementById('editDescription').value = ad.description || '';
+                document.getElementById('editTargetUrl').value = ad.targetUrl || '';
+                document.getElementById('editLocation').value = ad.location || '';
+                document.getElementById('editIsActive').checked = ad.isActive;
+                
+                // Format dates for datetime-local input
+                if (ad.startDate) {
+                    document.getElementById('editStartDate').value = new Date(ad.startDate).toISOString().slice(0, 16);
+                }
+                if (ad.endDate) {
+                    document.getElementById('editEndDate').value = new Date(ad.endDate).toISOString().slice(0, 16);
+                }
+                
+                // Show current image
+                document.getElementById('editCurrentImg').src = ad.imagePath;
+                document.getElementById('editCurrentImage').style.display = 'block';
+                document.getElementById('editImagePreview').style.display = 'none';
+            } catch (error) {
+                console.error('Error loading advertisement:', error);
+                alert('Error loading advertisement data');
+            }
+        }
+        
+        // Delete advertisement
+        async function deleteAdvertisement(id, title) {
+            if (confirm(`Are you sure you want to delete the advertisement "${title}"?`)) {
+                try {
+                    const response = await fetch(`/api/ads/${id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        alert('Error deleting advertisement');
+                    }
+                } catch (error) {
+                    console.error('Error deleting advertisement:', error);
+                    alert('Error deleting advertisement');
+                }
+            }
+        }
+    </script>
+}

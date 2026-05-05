@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <defs>
+    <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5a3c;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#5a3829;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#grad2)" />
+  <rect x="50" y="80" width="15" height="80" fill="white" opacity="0.8"/>
+  <rect x="70" y="75" width="15" height="85" fill="white" opacity="0.7"/>
+  <rect x="90" y="85" width="15" height="75" fill="white" opacity="0.9"/>
+  <rect x="110" y="78" width="15" height="82" fill="white" opacity="0.6"/>
+  <rect x="130" y="82" width="15" height="78" fill="white" opacity="0.8"/>
+  <text x="200" y="120" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="26" font-weight="bold">WTAMU Library</text>
+  <text x="200" y="150" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="16">Open 24/7 During Finals</text>
+  <text x="200" y="180" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="14">Study rooms • Research help</text>
+  <text x="200" y="200" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="14">Online resources available</text>
+</svg>
