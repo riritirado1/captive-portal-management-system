@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using CaptivePortal.Web.Data;
+using CaptivePortal.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,6 +32,17 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options =>
     options.User.RequireUniqueEmail = true;
 })
 .AddEntityFrameworkStores<ApplicationDbContext>();
+
+// Configure Wi-Fi Access Service (PBI#5)
+builder.Services.Configure<WiFiAccessOptions>(options =>
+{
+    builder.Configuration.GetSection("CaptivePortal:WiFiAccess").Bind(options);
+    // Manually bind RedirectUrls from the separate section
+    var redirectSection = builder.Configuration.GetSection("CaptivePortal:RedirectUrls");
+    options.RedirectUrls = redirectSection.Get<Dictionary<string, string>>() ?? new Dictionary<string, string>();
+});
+
+builder.Services.AddScoped<IWiFiAccessService, WiFiAccessService>();
 
 builder.Services.AddRazorPages(options =>
 {

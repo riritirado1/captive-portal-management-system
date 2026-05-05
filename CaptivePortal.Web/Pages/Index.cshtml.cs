@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Net;
 using CaptivePortal.Web.Data;
 using CaptivePortal.Web.Models;
+using CaptivePortal.Web.Services;
 
 namespace CaptivePortal.Web.Pages;
 
@@ -12,11 +13,13 @@ public class IndexModel : PageModel
 {
     private readonly ApplicationDbContext _context;
     private readonly ILogger<IndexModel> _logger;
+    private readonly IWiFiAccessService _wifiAccessService;
 
-    public IndexModel(ApplicationDbContext context, ILogger<IndexModel> logger)
+    public IndexModel(ApplicationDbContext context, ILogger<IndexModel> logger, IWiFiAccessService wifiAccessService)
     {
         _context = context;
         _logger = logger;
+        _wifiAccessService = wifiAccessService;
     }
 
     [BindProperty]
@@ -45,6 +48,8 @@ public class IndexModel : PageModel
 
         try
         {
+            var returnUrl = Request.Query["returnUrl"].ToString();
+            
             // Create portal user record
             var portalUser = new PortalUser
             {
@@ -54,37 +59,59 @@ public class IndexModel : PageModel
                 TermsAcceptedAt = DateTime.UtcNow,
                 IpAddress = GetClientIpAddress(),
                 UserAgent = Request.Headers.UserAgent.ToString(),
-                Location = GetConnectionLocation()
+                Location = GetConnectionLocation(),
+                MacAddress = GetClientMacAddress()
             };
 
-            // Check if user already exists (within last hour)
+            // Check if user already exists (within last 24 hours)
             var existingUser = await _context.PortalUsers
                 .FirstOrDefaultAsync(u => u.Email == portalUser.Email && 
-                                        u.ConnectedAt > DateTime.UtcNow.AddHours(-1));
+                                        u.ConnectedAt > DateTime.UtcNow.AddHours(-24));
 
-            if (existingUser == null)
+            if (existingUser != null)
+            {
+                // Update existing user's reconnection info
+                existingUser.ReconnectionCount++;
+                existingUser.LastActivityAt = DateTime.UtcNow;
+                existingUser.IpAddress = portalUser.IpAddress;
+                existingUser.UserAgent = portalUser.UserAgent;
+                portalUser = existingUser;
+            }
+            else
             {
                 _context.PortalUsers.Add(portalUser);
-                await _context.SaveChangesAsync();
             }
 
-            // Log successful connection
-            _logger.LogInformation("User {Email} connected from {IpAddress} at {Location}", 
-                Email, portalUser.IpAddress, portalUser.Location);
+            // Grant Wi-Fi access through the service
+            var accessResult = await _wifiAccessService.GrantAccessAsync(portalUser, returnUrl);
 
-            // Redirect to success page with original URL
-            var returnUrl = Request.Query["returnUrl"].ToString();
-            if (!string.IsNullOrEmpty(returnUrl))
+            if (accessResult.Success)
             {
-                return Redirect(returnUrl);
-            }
+                await _context.SaveChangesAsync();
 
-            return RedirectToPage("/Success");
+                // Log successful connection
+                _logger.LogInformation("User {Email} granted Wi-Fi access from {IpAddress} at {Location}. Session: {SessionId}", 
+                    Email, portalUser.IpAddress, portalUser.Location, accessResult.SessionId);
+
+                // Redirect to success page with access details
+                return RedirectToPage("/Success", new { 
+                    sessionId = accessResult.SessionId,
+                    email = portalUser.Email,
+                    location = portalUser.Location,
+                    redirectUrl = accessResult.RedirectUrl
+                });
+            }
+            else
+            {
+                ModelState.AddModelError("", accessResult.Message);
+                await LoadCurrentAdvertisement();
+                return Page();
+            }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error processing portal connection for {Email}", Email);
-            ModelState.AddModelError("", "An error occurred while connecting. Please try again.");
+            _logger.LogError(ex, "Error processing Wi-Fi access request for {Email}", Email);
+            ModelState.AddModelError("", "An error occurred while granting Wi-Fi access. Please try again.");
             await LoadCurrentAdvertisement();
             return Page();
         }
@@ -136,5 +163,23 @@ public class IndexModel : PageModel
         // In a real implementation, this would be determined by network configuration
         // For now, we'll use a default location
         return "Stadium";
+    }
+
+    private string? GetClientMacAddress()
+    {
+        // Note: MAC address is typically not available through HTTP requests for security reasons
+        // In a real captive portal implementation, this would be obtained through:
+        // 1. DHCP logs correlation
+        // 2. ARP table lookups on network equipment
+        // 3. 802.1X authentication data
+        // 4. Network controller APIs
+        
+        // For demonstration purposes, we'll generate a simulated MAC address
+        // based on the IP address to maintain some consistency
+        var ipHash = GetClientIpAddress().GetHashCode();
+        var mac = $"02:{Math.Abs(ipHash % 256):X2}:{Math.Abs((ipHash >> 8) % 256):X2}:" +
+                 $"{Math.Abs((ipHash >> 16) % 256):X2}:{Math.Abs((ipHash >> 24) % 256):X2}:FF";
+        
+        return mac;
     }
 }
