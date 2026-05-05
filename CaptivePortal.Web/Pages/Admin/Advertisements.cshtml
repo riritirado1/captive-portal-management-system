@@ -194,9 +194,14 @@
                                         <span class="badge @(AdvertisementsModel.GetStatusBadgeClass(ad.Status ?? "Draft"))">
                                             @(ad.Status ?? "Draft")
                                         </span>
-                                        @if (!ad.IsCurrentlyActive)
+                                        <br>
+                                        <span class="badge @(ad.IsActive ? "bg-success" : "bg-secondary")">
+                                            <i class="bi @(ad.IsActive ? "bi-check-circle" : "bi-x-circle")"></i>
+                                            @(ad.IsActive ? "Active" : "Inactive")
+                                        </span>
+                                        @if (!ad.IsCurrentlyActive && ad.IsActive)
                                         {
-                                            <br><small class="text-muted">Inactive</small>
+                                            <br><small class="text-warning"><i class="bi bi-clock"></i> Scheduled/Expired</small>
                                         }
                                     </td>
                                     <td>
@@ -213,14 +218,21 @@
                                     </td>
                                     <td>
                                         <div class="btn-group btn-group-sm" role="group">
+                                            <button class="btn @(ad.IsActive ? "btn-outline-success" : "btn-outline-secondary")" 
+                                                    onclick="toggleAdvertisement(@ad.Id)"
+                                                    title="@(ad.IsActive ? "Deactivate" : "Activate") Advertisement">
+                                                <i class="bi @(ad.IsActive ? "bi-toggle-on" : "bi-toggle-off")"></i>
+                                            </button>
                                             <button class="btn btn-outline-primary" 
                                                     onclick="editAdvertisement(@ad.Id)"
                                                     data-bs-toggle="modal" 
-                                                    data-bs-target="#editAdModal">
+                                                    data-bs-target="#editAdModal"
+                                                    title="Edit Advertisement">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
                                             <button class="btn btn-outline-danger" 
-                                                    onclick="deleteAdvertisement(@ad.Id, '@ad.Title')">
+                                                    onclick="deleteAdvertisement(@ad.Id, '@ad.Title')"
+                                                    title="Delete Advertisement">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </div>
@@ -516,6 +528,29 @@
             }
         }
         
+        // Toggle advertisement active status
+        async function toggleAdvertisement(id) {
+            try {
+                const response = await fetch(`/api/ads/${id}/toggle`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    showAlert(result.message, 'success');
+                    location.reload();
+                } else {
+                    showAlert('Error toggling advertisement', 'error');
+                }
+            } catch (error) {
+                console.error('Error toggling advertisement:', error);
+                showAlert('Error toggling advertisement', 'error');
+            }
+        }
+
         // Delete advertisement
         async function deleteAdvertisement(id, title) {
             if (confirm(`Are you sure you want to delete the advertisement "${title}"?`)) {
@@ -528,15 +563,185 @@
                     });
                     
                     if (response.ok) {
+                        showAlert('Advertisement deleted successfully', 'success');
                         location.reload();
                     } else {
-                        alert('Error deleting advertisement');
+                        showAlert('Error deleting advertisement', 'error');
                     }
                 } catch (error) {
                     console.error('Error deleting advertisement:', error);
-                    alert('Error deleting advertisement');
+                    showAlert('Error deleting advertisement', 'error');
                 }
             }
+        }
+
+        // Bulk operations
+        function getSelectedIds() {
+            const selected = document.querySelectorAll('.ad-select:checked');
+            return Array.from(selected).map(cb => parseInt(cb.value));
+        }
+
+        function updateSelectionCount() {
+            const selectedIds = getSelectedIds();
+            const count = selectedIds.length;
+            document.getElementById('selectedCount').textContent = count;
+            const bulkBar = document.getElementById('bulkActionsBar');
+            
+            if (count > 0) {
+                bulkBar.classList.remove('d-none');
+            } else {
+                bulkBar.classList.add('d-none');
+            }
+        }
+
+        async function bulkToggleActive() {
+            const selectedIds = getSelectedIds();
+            if (selectedIds.length === 0) {
+                showAlert('Please select advertisements to toggle', 'warning');
+                return;
+            }
+
+            if (confirm(`Toggle active status for ${selectedIds.length} advertisements?`)) {
+                try {
+                    const response = await fetch('/api/ads/bulk-toggle', {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ ids: selectedIds })
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        showAlert(result.message, 'success');
+                        location.reload();
+                    } else {
+                        showAlert('Error in bulk toggle operation', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error in bulk toggle:', error);
+                    showAlert('Error in bulk toggle operation', 'error');
+                }
+            }
+        }
+
+        async function bulkUpdateStatus(status) {
+            const selectedIds = getSelectedIds();
+            if (selectedIds.length === 0) {
+                showAlert('Please select advertisements to update', 'warning');
+                return;
+            }
+
+            if (confirm(`Update status to '${status}' for ${selectedIds.length} advertisements?`)) {
+                try {
+                    const response = await fetch('/api/ads/bulk-status', {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ ids: selectedIds, status: status })
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        showAlert(result.message, 'success');
+                        location.reload();
+                    } else {
+                        showAlert('Error updating status', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error updating status:', error);
+                    showAlert('Error updating status', 'error');
+                }
+            }
+        }
+
+        async function bulkDelete() {
+            const selectedIds = getSelectedIds();
+            if (selectedIds.length === 0) {
+                showAlert('Please select advertisements to delete', 'warning');
+                return;
+            }
+
+            if (confirm(`Are you sure you want to delete ${selectedIds.length} advertisements? This action cannot be undone.`)) {
+                try {
+                    const response = await fetch('/api/ads/bulk-delete', {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ ids: selectedIds })
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        showAlert(result.message, 'success');
+                        location.reload();
+                    } else {
+                        showAlert('Error deleting advertisements', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error deleting advertisements:', error);
+                    showAlert('Error deleting advertisements', 'error');
+                }
+            }
+        }
+
+        // Selection management
+        document.getElementById('selectAll').addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.ad-select');
+            checkboxes.forEach(cb => cb.checked = this.checked);
+            updateSelectionCount();
+        });
+
+        // Individual checkbox change
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('ad-select')) {
+                updateSelectionCount();
+                
+                // Update "Select All" checkbox state
+                const allCheckboxes = document.querySelectorAll('.ad-select');
+                const checkedBoxes = document.querySelectorAll('.ad-select:checked');
+                const selectAllCheckbox = document.getElementById('selectAll');
+                
+                if (checkedBoxes.length === 0) {
+                    selectAllCheckbox.indeterminate = false;
+                    selectAllCheckbox.checked = false;
+                } else if (checkedBoxes.length === allCheckboxes.length) {
+                    selectAllCheckbox.indeterminate = false;
+                    selectAllCheckbox.checked = true;
+                } else {
+                    selectAllCheckbox.indeterminate = true;
+                }
+            }
+        });
+
+        // Clear filters
+        document.getElementById('clearFilters').addEventListener('click', function() {
+            document.getElementById('filterForm').reset();
+            // Trigger filter application or reload
+        });
+
+        // Show alert messages
+        function showAlert(message, type) {
+            // Create alert element
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            // Insert at top of page
+            const container = document.querySelector('.admin-advertisements');
+            container.insertBefore(alertDiv, container.firstChild);
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
         }
     </script>
 }

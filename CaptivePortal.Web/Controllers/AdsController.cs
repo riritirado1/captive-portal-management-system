@@ -170,6 +170,169 @@ namespace CaptivePortal.Web.Controllers
         }
 
         /// <summary>
+        /// Toggle advertisement active status (admin only)
+        /// </summary>
+        [HttpPut("{id}/toggle")]
+        [Authorize]
+        public async Task<IActionResult> ToggleAdvertisement(int id)
+        {
+            try
+            {
+                var advertisement = await _context.Advertisements
+                    .FirstOrDefaultAsync(a => a.Id == id);
+
+                if (advertisement == null)
+                {
+                    return NotFound(new { message = "Advertisement not found" });
+                }
+
+                advertisement.IsActive = !advertisement.IsActive;
+                advertisement.LastModified = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Advertisement {Id} '{Title}' toggled to {Status}", 
+                    id, advertisement.Title, advertisement.IsActive ? "Active" : "Inactive");
+
+                return Ok(new { 
+                    success = true, 
+                    isActive = advertisement.IsActive,
+                    message = $"Advertisement {(advertisement.IsActive ? "activated" : "deactivated")} successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error toggling advertisement {Id}", id);
+                return StatusCode(500, new { message = "Error toggling advertisement" });
+            }
+        }
+
+        /// <summary>
+        /// Bulk toggle advertisements (admin only)
+        /// </summary>
+        [HttpPut("bulk-toggle")]
+        [Authorize]
+        public async Task<IActionResult> BulkToggleAdvertisements([FromBody] BulkToggleRequest request)
+        {
+            try
+            {
+                var advertisements = await _context.Advertisements
+                    .Where(a => request.Ids.Contains(a.Id))
+                    .ToListAsync();
+
+                if (!advertisements.Any())
+                {
+                    return NotFound(new { message = "No advertisements found" });
+                }
+
+                foreach (var ad in advertisements)
+                {
+                    ad.IsActive = !ad.IsActive;
+                    ad.LastModified = DateTime.UtcNow;
+                }
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Bulk toggle completed for {Count} advertisements", advertisements.Count);
+
+                return Ok(new { 
+                    success = true, 
+                    count = advertisements.Count,
+                    message = $"Successfully toggled {advertisements.Count} advertisements"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in bulk toggle operation");
+                return StatusCode(500, new { message = "Error in bulk toggle operation" });
+            }
+        }
+
+        /// <summary>
+        /// Bulk update advertisement status (admin only)
+        /// </summary>
+        [HttpPut("bulk-status")]
+        [Authorize]
+        public async Task<IActionResult> BulkUpdateStatus([FromBody] BulkStatusRequest request)
+        {
+            try
+            {
+                var advertisements = await _context.Advertisements
+                    .Where(a => request.Ids.Contains(a.Id))
+                    .ToListAsync();
+
+                if (!advertisements.Any())
+                {
+                    return NotFound(new { message = "No advertisements found" });
+                }
+
+                foreach (var ad in advertisements)
+                {
+                    ad.Status = request.Status;
+                    ad.LastModified = DateTime.UtcNow;
+                }
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Bulk status update to '{Status}' completed for {Count} advertisements", 
+                    request.Status, advertisements.Count);
+
+                return Ok(new { 
+                    success = true, 
+                    count = advertisements.Count,
+                    message = $"Successfully updated status to '{request.Status}' for {advertisements.Count} advertisements"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in bulk status update operation");
+                return StatusCode(500, new { message = "Error in bulk status update operation" });
+            }
+        }
+
+        /// <summary>
+        /// Bulk delete advertisements (admin only)
+        /// </summary>
+        [HttpDelete("bulk-delete")]
+        [Authorize]
+        public async Task<IActionResult> BulkDeleteAdvertisements([FromBody] BulkDeleteRequest request)
+        {
+            try
+            {
+                var advertisements = await _context.Advertisements
+                    .Where(a => request.Ids.Contains(a.Id))
+                    .ToListAsync();
+
+                if (!advertisements.Any())
+                {
+                    return NotFound(new { message = "No advertisements found" });
+                }
+
+                // Delete associated image files
+                foreach (var ad in advertisements)
+                {
+                    DeleteImageFile(ad.ImagePath);
+                }
+
+                // Delete from database
+                _context.Advertisements.RemoveRange(advertisements);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Bulk delete completed for {Count} advertisements", advertisements.Count);
+
+                return Ok(new { 
+                    success = true, 
+                    count = advertisements.Count,
+                    message = $"Successfully deleted {advertisements.Count} advertisements"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in bulk delete operation");
+                return StatusCode(500, new { message = "Error in bulk delete operation" });
+            }
+        }
+
+        /// <summary>
         /// Get advertisement statistics (admin only)
         /// </summary>
         [HttpGet("statistics")]
@@ -242,5 +405,21 @@ namespace CaptivePortal.Web.Controllers
     public class TrackClickRequest
     {
         public int AdvertisementId { get; set; }
+    }
+
+    public class BulkToggleRequest
+    {
+        public int[] Ids { get; set; } = Array.Empty<int>();
+    }
+
+    public class BulkStatusRequest
+    {
+        public int[] Ids { get; set; } = Array.Empty<int>();
+        public string Status { get; set; } = string.Empty;
+    }
+
+    public class BulkDeleteRequest
+    {
+        public int[] Ids { get; set; } = Array.Empty<int>();
     }
 }
