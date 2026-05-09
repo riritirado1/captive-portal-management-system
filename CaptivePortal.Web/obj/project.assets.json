@@ -5866,11 +5866,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\rnyln\\Desktop\\Raul Tirado\\Raul - Software Systems Development\\captive-portal-management-system\\CaptivePortal.Web\\CaptivePortal.Web.csproj",
+      "projectUniqueName": "C:\\Users\\rnyln\\Desktop\\Raul Tirado\\New folder\\captive-portal-management-system\\CaptivePortal.Web\\CaptivePortal.Web.csproj",
       "projectName": "CaptivePortal.Web",
-      "projectPath": "C:\\Users\\rnyln\\Desktop\\Raul Tirado\\Raul - Software Systems Development\\captive-portal-management-system\\CaptivePortal.Web\\CaptivePortal.Web.csproj",
+      "projectPath": "C:\\Users\\rnyln\\Desktop\\Raul Tirado\\New folder\\captive-portal-management-system\\CaptivePortal.Web\\CaptivePortal.Web.csproj",
       "packagesPath": "C:\\Users\\rnyln\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\rnyln\\Desktop\\Raul Tirado\\Raul - Software Systems Development\\captive-portal-management-system\\CaptivePortal.Web\\obj\\",
+      "outputPath": "C:\\Users\\rnyln\\Desktop\\Raul Tirado\\New folder\\captive-portal-management-system\\CaptivePortal.Web\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\rnyln\\AppData\\Roaming\\NuGet\\NuGet.Config"
