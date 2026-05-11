@@ -36,12 +36,6 @@ This project is a full-featured Captive Portal Management System for West Texas 
 - Bulk operations for status and deletion
 - RESTful API endpoints for all control actions
 
-## Remaining PBIs (Next Steps)
-- **User Management & Analytics**: Admin interface for user data, search, and session management
-- **Campaign Management UI**: Full CRUD and analytics for campaigns
-- **System Settings**: Portal and Wi-Fi configuration, branding, and rules
-- **Reports & Analytics**: Usage, ad performance, and exportable reports
-- **WiFi Access Control**: Manual access granting/revoking, device management
 
 ## Technologies Used
 - ASP.NET Core 10.0 (Razor Pages)
@@ -55,4 +49,3 @@ This project is a full-featured Captive Portal Management System for West Texas 
 2. Open in Visual Studio or VS Code
 3. Run database migrations
 4. Start the application (`dotnet run`)
-5. Access the admin interface at `/Admin` (default admin: `admin@wtamu.edu` / `Admin@123!`)
